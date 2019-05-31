@@ -14,12 +14,24 @@ RAMFS_TMP="/tmp/arter97-tissot-ramdisk"
 echo "ramfs_tmp = $RAMFS_TMP"
 cd $KERNELDIR
 
+stock=0
+if [[ "${1}" == "stock" ]] ; then
+	stock=1
+	shift
+fi
+
 if [[ "${1}" == "skip" ]] ; then
 	echo "Skipping Compilation"
 else
+	if [[ "$stock" == "1" ]] ; then
+		sed -i -e 's@"want_initramfs"@"skip_initramfs"@g' init/initramfs.c
+	fi
 	echo "Compiling kernel"
 	cp defconfig .config
 	make "$@" || exit 1
+	if [[ "$stock" == "1" ]] ; then
+		sed -i -e 's@"skip_initramfs"@"want_initramfs"@g' init/initramfs.c
+	fi
 fi
 
 echo "Building new ramdisk"
@@ -37,6 +49,12 @@ find . -name EMPTY_DIRECTORY -exec rm -rf {} \;
 
 sed -i -e s@ro.build.version.release.*@ro.build.version.release=${OS}@g \
        -e s@ro.build.version.security_patch.*@ro.build.version.security_patch=${SPL}-01@g prop.default
+
+if [[ "$stock" == "1" ]] ; then
+	# Don't use Magisk
+	mv .backup/init init
+	rm -rf .backup
+fi
 
 $KERNELDIR/ramdisk_fix_permissions.sh 2>/dev/null
 
