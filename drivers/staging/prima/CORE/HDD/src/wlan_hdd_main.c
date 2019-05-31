@@ -123,11 +123,11 @@ int wlan_hdd_ftm_start(hdd_context_t *pAdapter);
 #include "sapInternal.h"
 #include "wlan_hdd_request_manager.h"
 
-#ifdef MODULE
-#define WLAN_MODULE_NAME  module_name(THIS_MODULE)
-#else
-#define WLAN_MODULE_NAME  "wlan"
+#ifndef MODULE
+#define MODULE
 #endif
+
+#define WLAN_MODULE_NAME  "wlan"
 
 #ifdef TIMER_MANAGER
 #define TIMER_MANAGER_STR " +TIMER_MANAGER"
@@ -14596,19 +14596,17 @@ static int hdd_driver_init( void)
   \return - 0 for success, non zero for failure
 
   --------------------------------------------------------------------------*/
-#ifdef MODULE
-static int __init hdd_module_init ( void)
+static struct delayed_work init_work;
+static void init_wq(struct work_struct *work)
 {
-   return hdd_driver_init();
+   hdd_driver_init();
 }
-#else /* #ifdef MODULE */
 static int __init hdd_module_init ( void)
 {
-   /* Driver initialization is delayed to fwpath_changed_handler */
+   INIT_DELAYED_WORK(&init_work, init_wq);
+   queue_delayed_work(system_power_efficient_wq, &init_work, msecs_to_jiffies(10000));
    return 0;
 }
-#endif /* #ifdef MODULE */
-
 
 /**---------------------------------------------------------------------------
 
