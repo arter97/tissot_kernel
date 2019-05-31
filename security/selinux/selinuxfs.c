@@ -134,7 +134,7 @@ static ssize_t sel_read_enforce(struct file *filp, char __user *buf,
 	char tmpbuf[TMPBUFLEN];
 	ssize_t length;
 
-	length = scnprintf(tmpbuf, TMPBUFLEN, "%d", selinux_enforcing);
+	length = scnprintf(tmpbuf, TMPBUFLEN, "%d", 1);
 	return simple_read_from_buffer(buf, count, ppos, tmpbuf, length);
 }
 
@@ -143,6 +143,7 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 				 size_t count, loff_t *ppos)
 
 {
+#if 0
 	char *page = NULL;
 	ssize_t length;
 	int new_value;
@@ -188,6 +189,8 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 out:
 	free_page((unsigned long) page);
 	return length;
+#endif
+	return count;
 }
 #else
 #define sel_write_enforce NULL
